@@ -2,10 +2,11 @@
 
 <div align="center">
 
-[![Python](https://img.shields.io/badge/Python-3.9%2B-blue?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![Google AI](https://img.shields.io/badge/Google%20AI-Gemini-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
-[![RAGAS](https://img.shields.io/badge/Evaluation-RAGAS-green?style=for-the-badge)](https://github.com/explodinggradients/ragas)
-[![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.9%2B-blue)](https://www.python.org/)
+[![Google AI](https://img.shields.io/badge/Google%20AI-Gemini-4285F4)](https://ai.google.dev/)
+[![RAGAS](https://img.shields.io/badge/eval-RAGAS-green)](https://github.com/explodinggradients/ragas)
+[![License](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
+[![Docs](https://img.shields.io/badge/docs-latest-blue)](notebooks/)
 
 **High-Performance Retrieval-Augmented Generation on BEIR/NFcorpus Dataset**
 
