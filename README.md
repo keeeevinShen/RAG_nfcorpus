@@ -132,26 +132,41 @@ Enhanced features include:
 
 ## 📊 Results
 
-### Baseline Performance
+### Baseline Performance on train.csv
 
-| Metric | Score | Description |
-|--------|-------|-------------|
-| **Answer Faithfulness** | 0.XX | Factual consistency with retrieved context |
-| **Context Precision** | 0.XX | Relevance of retrieved documents |
-| **Context Recall** | 0.XX | Coverage of relevant information |
-| **Answer Relevancy** | 0.XX | Direct answer to the query |
+| Metric | mean_score | Std Dev | Description |
+|--------|-------|---------|-------------|
+| **Answer Faithfulness** | 0.98 | ±0.063 | Factual consistency with retrieved context |
+| **Answer Relevancy** | 0.81 | ±0.341 | Direct answer to the query |
+| **Context Precision** | 0.82 | ±0.114 | Relevance of retrieved documents |
+| **Average Score** | 0.87 | ±0.141 | Overall RAG performance |
 
-*Full evaluation metrics and detailed analysis available in `baseline_RAG.ipynb`*
+*Summary statistics were obtained by evaluating on `train.csv`. The full data can be found by running `baseline_RAG.ipynb`*
 
-### Enhanced Model Performance
+### 🚧 Problem analysis
 
-🚧 **Coming Soon** - Check `improved_RAG.ipynb` for latest experiments
+ **Biggest problem** - Answer Relevancy's standard deviation is very high, and the minimum score is 0.
+
+ **less urgent problem** - Context Precision has a relatively low score and standard deviation. 
+
+### 🎯 What do these problems indicate?
+
+**inconsistency in LLM answers** - 
+The high standard deviation indicates that the LLM's ability to provide a relevant answer is unreliable. It can produce answers that are completely off-topic (min score of 0.0); we should try to make it more robust and stick to the context. 
+
+
+**room to improve** - 
+An average of 0.82 in Context Precision indicates that the documents being retrieved are generally relevant and useful for answering the question. But there is still room to improve the precision. And this improvement on Context precision can improve the Answer Relevancy score. 
+
+So the place to look at is the `generate_answer`,`add_documents` and `retrieve` method. 
+
+
 
 ## 📖 Documentation
 
 ### Dataset Information
 
-- **Source**: [BEIR NFcorpus](https://github.com/beir-cellar/beir)
+- **Source**: [BEIR NFcorpus](https://huggingface.co/datasets/BeIR/nfcorpus)
 - **Domain**: Nutrition and health queries
 - **Size**: ~3.6K queries, ~3.6K documents
 - **Characteristics**: Medical/nutrition focused, expert-annotated relevance
@@ -164,18 +179,7 @@ We use [RAGAS](https://github.com/explodinggradients/ragas) for comprehensive ev
 - **Context Quality**: Measures precision and recall of retrieval
 - **Answer Quality**: Assesses relevancy and completeness
 
-## 🤝 Contributing
 
-We welcome contributions! Please feel free to:
-
-- 🐛 Report bugs
-- 💡 Suggest new features
-- 🔧 Submit pull requests
-- 📚 Improve documentation
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
@@ -188,7 +192,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 <div align="center">
 
-**Made with ❤️ by the RAG Research Team**
+**Made with ❤️ by Hao Shen**
 
 [⬆ Back to Top](#-rag-on-nfcorpus)
 
