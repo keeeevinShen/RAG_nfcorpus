@@ -130,9 +130,8 @@ Enhanced features include:
 - Context reranking mechanisms
 - Prompt optimization
 
-## 📊 Results
+## 📊 Baseline RAG Performance
 
-### Baseline Performance on train.csv
 
 | Metric | mean_score | Std Dev | Description |
 |--------|-------|---------|-------------|
@@ -160,7 +159,14 @@ An average of 0.82 in Context Precision indicates that the documents being retri
 
 So the place to look at is the `generate_answer`,`add_documents` and `retrieve` method. 
 
+Detail improvement can be found on `improved_RAG` notebook.
 
+## 📈 Improved RAG Performance
+
+### Improvements Made:
+
+- **Prompt**: A more robust prompt for context awareness to avoid hallucination.
+- **Embedding**: Excluded titles from embeddings to improve retrieval precision.
 
 ## 📖 Documentation
 
