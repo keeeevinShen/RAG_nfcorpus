@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG Performance Analysis - Technical Details</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .main-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #e1e8ed;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: #7f8c8d;
+            font-weight: 300;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section h2 {
+            font-size: 1.8rem;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section h3 {
+            font-size: 1.4rem;
+            color: #34495e;
+            margin-bottom: 1rem;
+            margin-top: 2rem;
+        }
+
+        .section h4 {
+            font-size: 1.2rem;
+            color: #2980b9;
+            margin-bottom: 0.8rem;
+            margin-top: 1.5rem;
+            font-weight: 600;
+        }
+
+        .performance-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .performance-table th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .performance-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e1e8ed;
+            transition: background-color 0.3s ease;
+        }
+
+        .performance-table tr:hover td {
+            background-color: #f8f9fa;
+        }
+
+        .performance-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .metric-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .score {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .score.excellent {
+            color: #27ae60;
+        }
+
+        .score.good {
+            color: #f39c12;
+        }
+
+        .score.average {
+            color: #e74c3c;
+        }
+
+        .summary-note {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+            font-style: italic;
+        }
+
+        .problem-analysis {
+            background: #fff5f5;
+            border-left: 4px solid #e53e3e;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+        }
+
+        .problem-analysis h4 {
+            color: #e53e3e;
+            margin-top: 0;
+        }
+
+        .improvement-area {
+            background: #f0fff4;
+            border-left: 4px solid #48bb78;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+        }
+
+        .improvement-area h4 {
+            color: #48bb78;
+            margin-top: 0;
+        }
+
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .insight-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e1e8ed;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .insight-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .insight-card h4 {
+            margin-top: 0;
+        }
+
+        .highlight {
+            background: linear-gradient(120deg, #a8edea 0%, #fed6e3 100%);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .emoji {
+            font-size: 1.2rem;
+            margin-right: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 2rem 1.5rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .performance-table {
+                font-size: 0.9rem;
+            }
+            
+            .performance-table th,
+            .performance-table td {
+                padding: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <div class="header">
+                <h1>RAG System Performance Analysis</h1>
+                <p>Technical evaluation and improvement insights for NFcorpus dataset</p>
+            </div>
+
+            <div class="section">
+                <h2><span class="emoji">📊</span>Baseline RAG Performance</h2>
+                
+                <table class="performance-table">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Mean Score</th>
+                            <th>Std Dev</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="metric-name">Answer Faithfulness</td>
+                            <td class="score excellent">0.98</td>
+                            <td>±0.063</td>
+                            <td>Factual consistency with retrieved context</td>
+                        </tr>
+                        <tr>
+                            <td class="metric-name">Answer Relevancy</td>
+                            <td class="score good">0.81</td>
+                            <td>±0.341</td>
+                            <td>Direct answer to the query</td>
+                        </tr>
+                        <tr>
+                            <td class="metric-name">Context Precision</td>
+                            <td class="score good">0.82</td>
+                            <td>±0.114</td>
+                            <td>Relevance of retrieved documents</td>
+                        </tr>
+                        <tr style="background: #f8f9fa; font-weight: 600;">
+                            <td class="metric-name">Average Score</td>
+                            <td class="score good">0.87</td>
+                            <td>±0.141</td>
+                            <td>Overall RAG performance</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="summary-note">
+                    <strong>Evaluation Note:</strong> Summary statistics were obtained by evaluating on <code>train.csv</code>. The full data can be found by running <code>baseline_RAG.ipynb</code>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2><span class="emoji">🚧</span>Problem Analysis</h2>
+                
+                <div class="problem-analysis">
+                    <h4>Biggest Problem</h4>
+                    <p><span class="highlight">Answer Relevancy's standard deviation is very high</span>, and the minimum score is 0.</p>
+                </div>
+
+                <div class="improvement-area">
+                    <h4>Less Urgent Problem</h4>
+                    <p><span class="highlight">Context Precision has a relatively low score</span> and standard deviation.</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2><span class="emoji">🎯</span>What Do These Problems Indicate?</h2>
+                
+                <div class="insights-grid">
+                    <div class="insight-card">
+                        <h4><span class="emoji">⚠️</span>Inconsistency in LLM Answers</h4>
+                        <p>The high standard deviation indicates that the LLM's ability to provide a relevant answer is <strong>unreliable</strong>. It can produce answers that are completely off-topic (min score of 0.0); we should try to make it more robust and stick to the context.</p>
+                    </div>
+
+                    <div class="insight-card">
+                        <h4><span class="emoji">📈</span>Room to Improve</h4>
+                        <p>An average of 0.82 in Context Precision indicates that the documents being retrieved are generally relevant and useful for answering the question. But there is still <strong>room to improve the precision</strong>. And this improvement on Context precision can improve the Answer Relevancy score.</p>
+                    </div>
+                </div>
+
+                <div class="summary-note">
+                    <strong>Action Items:</strong> So the place to look at is the <code>generate_answer</code>, <code>add_documents</code> and <code>retrieve</code> method. Detail improvement can be found on <code>improved_RAG</code> notebook.
+                </div>
+            </div>
+
+            <div class="section">
+                <h2><span class="emoji">💡</span>First Improvement: Advanced Chunk Splitting</h2>
+                <p>To address the high variance in <strong>Answer Relevancy</strong>, the chunking strategy was updated. Instead of a simple character-based split, a semantic chunking approach was implemented. This method aims to create more coherent and contextually complete chunks, which should provide better material for the generator model.</p>
+
+                <h3><span class="emoji">📊</span>Performance After Chunk Splitting</h3>
+                <table class="performance-table">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Mean Score</th>
+                            <th>Std Dev</th>
+                            <th>Min Score</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="metric-name">Answer Faithfulness</td>
+                            <td class="score excellent">0.95</td>
+                            <td>±0.126</td>
+                            <td>0.60</td>
+                            <td>Factual consistency with retrieved context</td>
+                        </tr>
+                        <tr>
+                            <td class="metric-name">Answer Relevancy</td>
+                            <td class="score good">0.85</td>
+                            <td>±0.280</td>
+                            <td>0.20</td>
+                            <td>Direct answer to the query</td>
+                        </tr>
+                        <tr>
+                            <td class="metric-name">Context Precision</td>
+                            <td class="score good">0.81</td>
+                            <td>±0.110</td>
+                            <td>0.60</td>
+                            <td>Relevance of retrieved documents</td>
+                        </tr>
+                        <tr style="background: #f8f9fa; font-weight: 600;">
+                            <td class="metric-name">Average Score</td>
+                            <td class="score good">0.87</td>
+                            <td>±0.109</td>
+                            <td>0.60</td>
+                            <td>Overall RAG performance</td>
+                        </tr>
+                    </tbody>
+                </table>
+                 <div class="summary-note">
+                    <strong>Evaluation Note:</strong> These statistics reflect the performance after updating the chunking strategy. The full data can be found by running <code>improved_RAG.ipynb</code>.
+                </div>
+
+                <h3><span class="emoji">🔍</span>Analysis of the Results</h3>
+                <div class="insights-grid">
+                     <div class="insight-card">
+                        <h4><span class="emoji">👍</span>Why did Answer Relevancy improve?</h4>
+                        <p>The mean score increased (0.81 ➔ 0.85), standard deviation dropped significantly (0.341 ➔ 0.280), and the minimum score rose from 0.0 to 0.2. <strong>Semantic chunking</strong> creates more contextually complete chunks. This provides the LLM with better-quality information, reducing ambiguity and making it easier to generate answers that are directly relevant to the query.</p>
+                    </div>
+                    <div class="insight-card">
+                        <h4><span class="emoji">🤔</span>Why did Context Precision not change?</h4>
+                        <p><strong>Context Precision</strong> remained almost the same (~0.81). This is because chunking affects the *content* of the retrieved documents, not the retrieval process itself. The retriever is still selecting the same documents, but the chunks from those documents are now more coherent. To improve this metric, the retrieval algorithm itself needs to be enhanced.</p>
+                    </div>
+                     <div class="insight-card">
+                        <h4><span class="emoji">📈</span>Conclusion</h4>
+                        <p>Updating the chunk splitting strategy successfully addressed the biggest problem: the inconsistency of <strong>Answer Relevancy</strong>. The system is now more reliable. The next bottleneck is clearly the retrieval step, as indicated by the static <strong>Context Precision</strong> score.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
