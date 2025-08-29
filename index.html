@@ -236,6 +236,15 @@
             <div class="header">
                 <h1>RAG System Performance Analysis</h1>
                 <p>Technical evaluation and improvement insights for NFcorpus dataset</p>
+                
+                <div class="summary-note" style="margin-top: 2rem; text-align: left; background: linear-gradient(135deg, #e3f2fd, #bbdefb); color: #0d47a1; border: 2px solid #2196f3;">
+                    <h3 style="margin-top: 0; color: #0d47a1;">📊 Objective Score Definition</h3>
+                    <p style="color: #0d47a1;">Throughout this analysis, we use a weighted composite score to evaluate RAG performance:</p>
+                    <div style="text-align: center; font-size: 1.3rem; font-weight: bold; margin: 1rem 0; padding: 1rem; background: #ffffff; border-radius: 8px; border: 2px solid #2196f3; color: #0d47a1;">
+                        Objective Score = (0.5 × Answer Relevancy) + (0.4 × Context Precision) + (0.1 × Answer Faithfulness)
+                    </div>
+                    <p style="color: #0d47a1;">This formula prioritizes answer relevancy and context precision while ensuring factual grounding.</p>
+                </div>
             </div>
 
             <div class="section">
@@ -270,10 +279,10 @@
                             <td>Relevance of retrieved documents</td>
                         </tr>
                         <tr style="background: #f8f9fa; font-weight: 600;">
-                            <td class="metric-name">Average Score</td>
-                            <td class="score good">0.87</td>
+                            <td class="metric-name">Objective Score</td>
+                            <td class="score good">0.831</td>
                             <td>±0.141</td>
-                            <td>Overall RAG performance</td>
+                            <td>Weighted composite performance score</td>
                         </tr>
                     </tbody>
                 </table>
@@ -355,11 +364,11 @@
                             <td>Relevance of retrieved documents</td>
                         </tr>
                         <tr style="background: #f8f9fa; font-weight: 600;">
-                            <td class="metric-name">Average Score</td>
-                            <td class="score good">0.87</td>
+                            <td class="metric-name">Objective Score</td>
+                            <td class="score good">0.844</td>
                             <td>±0.109</td>
                             <td>0.60</td>
-                            <td>Overall RAG performance</td>
+                            <td>Weighted composite performance score</td>
                         </tr>
                     </tbody>
                 </table>
@@ -371,16 +380,169 @@
                 <div class="insights-grid">
                      <div class="insight-card">
                         <h4><span class="emoji">👍</span>Why did Answer Relevancy improve?</h4>
-                        <p>The mean score increased (0.81 ➔ 0.85), standard deviation dropped significantly (0.341 ➔ 0.280), and the minimum score rose from 0.0 to 0.2. <strong>Semantic chunking</strong> creates more contextually complete chunks. This provides the LLM with better-quality information, reducing ambiguity and making it easier to generate answers that are directly relevant to the query.</p>
+                        <p>Answer Relevancy improved because chunking provides the LLM with a <strong>more focused and less noisy context</strong>. By removing irrelevant surrounding text, the model is less likely to get distracted and can more easily generate a direct answer to the query. This resulted in a higher mean score (0.81 ➔ 0.85) and more consistent performance (standard deviation dropped from 0.34 to 0.28).</p>
                     </div>
                     <div class="insight-card">
                         <h4><span class="emoji">🤔</span>Why did Context Precision not change?</h4>
-                        <p><strong>Context Precision</strong> remained almost the same (~0.81). This is because chunking affects the *content* of the retrieved documents, not the retrieval process itself. The retriever is still selecting the same documents, but the chunks from those documents are now more coherent. To improve this metric, the retrieval algorithm itself needs to be enhanced.</p>
+                        <p>Context Precision was stable (~0.81) because the retriever was already finding documents with a <strong>high density of useful sentences</strong>. Chunking simply narrowed the view to a smaller, but equally dense, chunk from that source, keeping the <strong>signal-to-noise ratio consistent</strong>.</p>
+                    </div>
+                     <div class="insight-card">
+                        <h4><span class="emoji">❓</span>Why did Answer Faithfulness slightly decrease?</h4>
+                        <p>Answer Faithfulness dropped slightly (0.98 ➔ 0.945) because chunking provides the LLM with a more <strong>isolated context</strong>. This process can separate a statement from its supporting details if they land in different chunks. If the retriever only fetches one of these, the LLM's answer may contain claims that aren't verifiable from that specific text, lowering the faithfulness score.</p>
                     </div>
                      <div class="insight-card">
                         <h4><span class="emoji">📈</span>Conclusion</h4>
-                        <p>Updating the chunk splitting strategy successfully addressed the biggest problem: the inconsistency of <strong>Answer Relevancy</strong>. The system is now more reliable. The next bottleneck is clearly the retrieval step, as indicated by the static <strong>Context Precision</strong> score.</p>
+                        <p>The chunking strategy successfully improved the average <strong>answer relevancy</strong> to 0.85, but performance remains inconsistent (±0.280). Conversely, while average <strong>faithfulness</strong> is high at 0.95, its reliability has decreased (std dev ±0.126). This trade-off is a net positive, as it guides future work to specifically target the reduction of this variance in both metrics.</p>
                     </div>
+                </div>
+            </div>
+             <div class="section">
+                <h2><span class="emoji">💡</span>Second Improvement: Fusion Retrieval and Reranking</h2>
+                <p>To further enhance performance, a more sophisticated retrieval process was implemented. This involved <strong>Reciprocal Rank Fusion (RRF)</strong> to combine results from multiple retrieval queries, followed by a <strong>Cohere Reranker</strong> to re-order the retrieved chunks based on their relevance to the query. This two-step process aims to improve both the quality and relevance of the context provided to the generator.</p>
+
+                <h3><span class="emoji">📊</span>Performance After Fusion and Reranking</h3>
+                <table class="performance-table">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Mean Score</th>
+                            <th>Std Dev</th>
+                            <th>Min Score</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="metric-name">Answer Faithfulness</td>
+                            <td class="score excellent">0.995</td>
+                            <td>±0.016</td>
+                            <td>0.95</td>
+                            <td>Factual consistency with retrieved context</td>
+                        </tr>
+                        <tr>
+                            <td class="metric-name">Answer Relevancy</td>
+                            <td class="score good">0.84</td>
+                            <td>±0.310</td>
+                            <td>0.00</td>
+                            <td>Direct answer to the query</td>
+                        </tr>
+                        <tr>
+                            <td class="metric-name">Context Precision</td>
+                            <td class="score excellent">0.84</td>
+                            <td>±0.097</td>
+                            <td>0.70</td>
+                            <td>Relevance of retrieved documents</td>
+                        </tr>
+                        <tr style="background: #f8f9fa; font-weight: 600;">
+                            <td class="metric-name">Objective Score</td>
+                            <td class="score good">0.856</td>
+                            <td>±0.114</td>
+                            <td>0.60</td>
+                            <td>Weighted composite performance score</td>
+                        </tr>
+                    </tbody>
+                </table>
+                 <div class="summary-note">
+                    <strong>Evaluation Note:</strong> These statistics reflect the performance after adding Fusion Retrieval and a Reranker. The full data can be found by running <code>improved_RAG.ipynb</code>.
+                </div>
+
+                <h3><span class="emoji">🔍</span>Analysis of the Results</h3>
+                <div class="insights-grid">
+                     <div class="insight-card">
+                        <h4><span class="emoji">🚀</span>Why did Faithfulness improve so much?</h4>
+                        <p><strong>Fusion Retrieval</strong> casts a wider, more effective net, while the <strong>Reranker</strong> acts as a powerful quality filter. This synergy provides the LLM with an extremely accurate and focused context, which is why Faithfulness became nearly perfect</p>
+                    </div>
+                    <div class="insight-card">
+                        <h4><span class="emoji">❓</span>Why did Answer Relevancy slightly decrease?</h4>
+                        <ul style="margin-top: 0.5rem; margin-left: 1.2rem;">
+                            <li style="margin-bottom: 0.5rem;">The retriever is now providing near-perfect context, which proves the issue is not the retriever but the <strong>generator's instructions</strong>.</li>
+                            <li style="margin-bottom: 0.5rem;">The simple prompt in your generate_answer function lacks the strict rules needed to keep the LLM focused.</li>
+                            <li>This allows it to occasionally get distracted and produce an off-topic response, causing the minimum score to drop to 0.0.</li>
+                        </ul>
+                    </div>
+                    <div class="insight-card">
+                        <h4><span class="emoji">🤔</span>Why did Context Precision stall?</h4>
+                        <ul style="margin-top: 0.5rem; margin-left: 1.2rem;">
+                            <li style="margin-bottom: 0.5rem;">The score is now capped by our chunking method.</li>
+                            <li style="margin-bottom: 0.5rem;">A retrieved chunk may contain the key sentence but also irrelevant filler text, diluting its precision.</li>
+                            <li>Further improvement requires more granular chunking that isolates individual facts, creating purer units for the retriever to find.</li>
+                        </ul>
+                    </div>
+                     <div class="insight-card">
+                        <h4><span class="emoji">📈</span>Conclusion</h4>
+                        <ul style="margin-top: 0.5rem; margin-left: 1.2rem;">
+                            <li style="margin-bottom: 0.5rem;">The gains in <strong>Answer Faithfulness</strong> are profound. This proves that the combination of Fusion Retrieval and Reranking delivers a highly accurate and relevant context to the generator.</li>
+                            <li>However, to improve Context Precision and Answer Relevancy, we need further hyperparameter tuning and improvements in the chunking technique.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="section">
+                <h2><span class="emoji">⚙️</span>Third Improvement: Semantic Chunking and Hyperparameter Tuning</h2>
+                <p>To achieve the best possible RAG system, we introduced two key enhancements: advanced <strong>semantic chunking</strong> and rigorous <strong>hyperparameter tuning</strong>. To guide this tuning process, we first needed to define what constitutes a "Good" RAG system by establishing a clear objective function.</p>
+
+
+
+                <h3><span class="emoji">🏆</span>Best Hyperparameters Found</h3>
+                <p>After running the hyperparameter tuning process, we identified the optimal set of parameters that maximized our objective score:</p>
+                
+                <div class="insights-grid">
+                    <div class="insight-card">
+                        <h4>Best Parameters</h4>
+                        <ul style="list-style-type: none; padding-left: 0;">
+                            <li><strong>Breakpoint Threshold:</strong> 97</li>
+                            <li><strong>Initial K (retrieval):</strong> 20</li>
+                            <li><strong>Final K (reranking):</strong> 10</li>
+                            <li><strong>Temperature (generation):</strong> 0.1</li>
+                        </ul>
+                    </div>
+                    <div class="insight-card">
+                        <h4>🚀 Best Score Achieved</h4>
+                        <p style="font-size: 2.5rem; text-align: center; font-weight: bold; color: #27ae60; margin-top: 1rem;">0.9620</p>
+                    </div>
+                </div>
+
+                <h3><span class="emoji">📊</span>Final Performance Metrics</h3>
+                <table class="performance-table">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Mean Score</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="metric-name">Answer Faithfulness</td>
+                            <td class="score excellent">0.98</td>
+                            <td>Factual consistency with retrieved context</td>
+                        </tr>
+                        <tr>
+                            <td class="metric-name">Answer Relevancy</td>
+                            <td class="score excellent">1.00</td>
+                            <td>Direct answer to the query</td>
+                        </tr>
+                        <tr>
+                            <td class="metric-name">Context Precision</td>
+                            <td class="score excellent">0.91</td>
+                            <td>Relevance of retrieved documents</td>
+                        </tr>
+                        <tr style="background: #f8f9fa; font-weight: 600;">
+                            <td class="metric-name">Objective Score</td>
+                            <td class="score excellent">0.962</td>
+                            <td>Weighted composite score</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="summary-note">
+                    <strong>Final Achievement:</strong> The hyperparameter tuning process successfully optimized our RAG system, achieving an objective score of <strong>0.962</strong>. This represents a significant improvement from the baseline score of 0.831, demonstrating the effectiveness of semantic chunking, fusion retrieval, reranking, and careful hyperparameter optimization.
+                </div>
+
+                <h3><span class="emoji">📊</span>Hyperparameter Importance</h3>
+                <p>The following chart illustrates the relative importance of each hyperparameter on the final score. This helps us understand which parameters have the most impact on performance.</p>
+                <div style="text-align: center; margin-top: 2rem;">
+                    <img src="Hyperparameter_importance.png" alt="Hyperparameter Importance" style="max-width: 100%; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);">
                 </div>
             </div>
         </div>
